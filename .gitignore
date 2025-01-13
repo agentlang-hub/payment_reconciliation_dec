@@ -1,0 +1,5 @@
+logs/
+resources/
+erp-db.*
+sample/payment_receipt_2.pdf
+deps/
