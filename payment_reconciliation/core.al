@@ -2,8 +2,6 @@
  :PaymentReconciliation.Core
  {:refer [:PaymentReconciliation.Schema :PaymentReconciliation.Receipt]})
 
-{:Agentlang.Core/LLM {:Type :openai :Name :llm01}}
-
 {:Agentlang.Core/Agent
  {:Name :PaymentReconciliation.Core/ExtractPaymentsInformation
   :LLM :llm01

@@ -1,5 +1,5 @@
 {:name :PaymentReconciliation
- :agentlang-version "0.6.2-alpha"
+ :agentlang-version "current"
  ;; :dependencies [[:fs "resolvers/slack"]
  ;;                [:fs "resolvers/odoo"]]
  :dependencies [[:git "https://github.com/agentlang-hub/slack.git#integrations"]

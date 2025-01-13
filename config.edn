@@ -1,21 +1,2 @@
-{:service {:port 8080}
- :store {:type :h2
-         :dbname "./erp-db"}}
-;; {:service {:port 8080}
-;;  :store {:type :h2
-;;          :dbname "./erp-db"}
-;;  ;; :odoo-enabled? true
-;;  :integration-manager
-;;  {:integrations {:Slack "MySlackIntegration"}
-;;   :username #$ CM_USER
-;;   :password #$ CM_PASSWORD
-;;   :host #$ CM_HOST
-;;   ;; :configurations
-;;   ;; {"MySlackIntegration"
-;;   ;;  {"pr-slack-connection"
-;;   ;;   {:Type :custom
-;;   ;;    :UserData {:ConnectionTypeName :Slack/Connection}
-;;   ;;    :Parameter {:apikey #$ SLACK_API_KEY :channelid #$ SLACK_CHANNEL_ID}}}}
-;;   ;; :connections [[:Slack/Connection "pr-slack-connection"]
-;;   ;;               [:Odoo/Connection "pr-odoo-connection"]]
-;;   }}
+{:llms {:llm01 {:Type :openai}},
+ :integration-manager {:integrations {:Slack "40499e75-4caf-4444-bc62-2afec85fc312"}}}
