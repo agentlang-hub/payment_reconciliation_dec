@@ -1,76 +1,65 @@
 (component
  :PaymentReconciliation.Core
- {:refer [:PaymentReconciliation.Schema :PaymentReconciliation.Receipt]})
+ {:refer [:PaymentReconciliation.Schema
+          :PaymentReconciliation.Receipt]})
 
-{:Agentlang.Core/LLM {:Type :openai :Name :llm01}}
+{:Agentlang.Core/Agent {:Name :PaymentReconciliation.Core/ExtractPaymentsInformation,
+                        :LLM :llm01,
+                        :UserInstruction (str
+                                          "Convert the following csv records to payments. For each payment, lookup all relevant invoice information. "
+                                          "The payment data for you to consider follows.\n\n"),
+                        :Tools [:PaymentReconciliation.Schema/Payment
+                                :PaymentReconciliation.Schema/LookupRelevantPaymentInformation]}}
 
-{:Agentlang.Core/Agent
- {:Name :PaymentReconciliation.Core/ExtractPaymentsInformation
-  :LLM :llm01
-  :UserInstruction (str "Convert the following csv records to payments. For each payment, lookup all relevant invoice information. "
-                        "The payment data for you to consider follows.\n\n")
-  :Tools [:PaymentReconciliation.Schema/Payment :PaymentReconciliation.Schema/LookupRelevantPaymentInformation]}}
+{:Agentlang.Core/Agent {:Name :PaymentReconciliation.Core/ReportNonReconcilablePayments,
+                        :LLM :llm01,
+                        :UserInstruction "Analyse the following text and report all payments that cannot be reconciled.",
+                        :Tools [:PaymentReconciliation.Schema/ReportPaymentMismatch]}}
 
-{:Agentlang.Core/Agent
- {:Name :PaymentReconciliation.Core/ReportNonReconcilablePayments
-  :LLM :llm01
-  :UserInstruction "Analyse the following text and report all payments that cannot be reconciled."
-  :Tools [:PaymentReconciliation.Schema/ReportPaymentMismatch]}}
+{:Agentlang.Core/Agent {:Name :PaymentReconciliation.Core/ReconcilePayments,
+                        :LLM :llm01,
+                        :UserInstruction "Analyse the following text and mark all reconcilable payments as reconciled.",
+                        :Tools [:PaymentReconciliation.Schema/MarkInvoiceAsReconciled]}}
 
-{:Agentlang.Core/Agent
- {:Name :PaymentReconciliation.Core/ReconcilePayments
-  :LLM :llm01
-  :UserInstruction "Analyse the following text and mark all reconcilable payments as reconciled."
-  :Tools [:PaymentReconciliation.Schema/MarkInvoiceAsReconciled]}}
+{:Agentlang.Core/Agent {:Name :PaymentReconciliation.Core/ExtractPaymentsForReconciliation,
+                        :LLM :llm01,
+                        :UserInstruction (str
+                                          "Extract the part of the following report that contains payments that can be reconciled.")}}
 
-{:Agentlang.Core/Agent
- {:Name :PaymentReconciliation.Core/ExtractPaymentsForReconciliation
-  :LLM :llm01
-  :UserInstruction (str "Extract the part of the following report that contains payments that can be reconciled.")}}
+{:Agentlang.Core/Agent {:Name :PaymentReconciliation.Core/ExtractNonReconcilablePayments,
+                        :LLM :llm01,
+                        :UserInstruction (str
+                                          "Extract the part of the following report that contains payments that cannot be reconciled.")}}
 
-{:Agentlang.Core/Agent
- {:Name :PaymentReconciliation.Core/ExtractNonReconcilablePayments
-  :LLM :llm01
-  :UserInstruction (str "Extract the part of the following report that contains payments that cannot be reconciled.")}}
+{:Agentlang.Core/Agent {:Name :PaymentReconciliation.Core/CreatePaymentsReconciliationReport,
+                        :LLM :llm01,
+                        :UserInstruction (str
+                                          "Analyse the following JSON data and compile a report with two sections:\n"
+                                          "The first section must contains all payments that cannot be reconciled with their respective orders. "
+                                          "The second section must contain only those payments that can be reconciled.\n"
+                                          "Include the order-no and invoice-no with each entry in the report. "
+                                          "Also include your reasoning that led to your conclusions.\n")}}
 
-{:Agentlang.Core/Agent
- {:Name :PaymentReconciliation.Core/CreatePaymentsReconciliationReport
-  :LLM :llm01
-  :UserInstruction (str "Analyse the following JSON data and compile a report with two sections:\n"
-                        "The first section must contains all payments that cannot be reconciled with their respective orders. "
-                        "The second section must contain only those payments that can be reconciled.\n"
-                        "Include the order-no and invoice-no with each entry in the report. "
-                        "Also include your reasoning that led to your conclusions.\n")}}
-
-{:Agentlang.Core/Agent
- {:Name :PaymentReconciliation.Core/PaymentReconciliation
-  :LLM :llm01
-  :Tools [:PaymentReconciliation.Receipt/FetchInvoicesAsCsv
-          :PaymentReconciliation.Schema/PaymentsInfoAsJson]
-  :Delegates [:PaymentReconciliation.Core/ExtractPaymentsInformation
-              :PaymentReconciliation.Core/CreatePaymentsReconciliationReport
-              :PaymentReconciliation.Core/ExtractPaymentsForReconciliation
-              :PaymentReconciliation.Core/ExtractNonReconcilablePayments
-              :PaymentReconciliation.Core/ReportNonReconcilablePayments
-              :PaymentReconciliation.Core/ReconcilePayments]
-  :UserInstruction (str "You are provided with the URL to a receipt document. First fetch the invoices in CSV format. Then process the CSV data "
-                        "according to the steps given below. Use an appropriate tool for each step.\n"
-                        "1. Extract payment information from the input. (Pass the entire CSV to the `PaymentReconciliation.Core/ExtractPaymentsInformation` tool).\n"
-                        "2. Convert that to JSON.\n"
-                        "3. Use the json from step (2) to create a payments reconciliation report.\n"
-                        "4. Extract payments for reconciliation from the report generated by step (3).\n"
-                        "5. Extract non-reconcilable payments from the report generated by step (3).\n"
-                        "6. Use the result of step (5) to report non-reconcilable payments.\n"
-                        "7. Reconcile the result from step (4).\n")}}
-;; Note: The `payment-reconciliation-controller-agent` must generate the dataflow:
-;; (dataflow
-;;  :PaymentReconciliation
-;;  {:ExtractPaymentsInformation {:UserInstruction :PaymentReconciliation.UserInstruction}
-;;   :as :paymentsinfo}
-;;  [:eval '(paymentreconciliation.schema/payment-info-as-json :paymentsinfo) :as :json]
-;;  {:CreatePaymentsReconciliationReport {:UserInstruction :json} :as :report}
-;;  [:eval '(println :report)]
-;;  {:ExtractPaymentsForReconciliation {:UserInstruction :report} :as :auto-recon}
-;;  {:ExtractNonReconcilablePayments {:UserInstruction :report} :as :manual-recon}
-;;  {:ReportNonReconcilablePayments {:UserInstruction :manual-recon}}
-;;  {:ReconcilePayments {:UserInstruction :auto-recon}})
+{:Agentlang.Core/Agent {:Name :PaymentReconciliation.Core/PaymentReconciliation,
+                        :Tools [:PaymentReconciliation.Receipt/FetchInvoicesAsCsv
+                                :PaymentReconciliation.Schema/PaymentsInfoAsJson],
+                        :Delegates [:PaymentReconciliation.Core/ExtractPaymentsInformation
+                                    :PaymentReconciliation.Core/CreatePaymentsReconciliationReport
+                                    :PaymentReconciliation.Core/ExtractPaymentsForReconciliation
+                                    :PaymentReconciliation.Core/ExtractNonReconcilablePayments
+                                    :PaymentReconciliation.Core/ReportNonReconcilablePayments
+                                    :PaymentReconciliation.Core/ReconcilePayments],
+                        :UserInstruction {:fn str,
+                                          :args ["You are provided with the URL to a receipt document. First fetch the invoices in CSV format. Then process the CSV data "
+                                                 "according to the steps given below. Use an appropriate tool for each step.\n"
+                                                 "1. Extract payment information from the input. (Pass the entire CSV to the `PaymentReconciliation.Core/ExtractPaymentsInformation` tool).\n"
+                                                 "2. Convert that to JSON.\n"
+                                                 "3. Use the json from step (2) to create a payments reconciliation report.\n"
+                                                 "4. Extract payments for reconciliation from the report generated by step (3).\n"
+                                                 "5. Extract non-reconcilable payments from the report generated by step (3).\n"
+                                                 "6. Use the result of step (5) to report non-reconcilable payments.\n"
+                                                 "7. Reconcile the result from step (4).\n"],
+                                          :type :exp,
+                                          :-*-syntax-*- true},
+                        :LLM :llm01,
+                        :Integrations ["My Slack Integration"]}}
