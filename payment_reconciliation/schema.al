@@ -64,7 +64,7 @@
   :Reconcile {:type :Boolean :default false}})
 
 (defn make-restart-url [inst reconcile?]
-  (str "http://localhost:8080/api/Agentlang.Kernel.Eval/Continue/"
+  (str (or (System/getenv "FRACTL_API_URL") "http://localhost:8080") "/api/Agentlang.Kernel.Eval/Continue/"
        (:SuspensionId inst)
        "$Reconcile:" reconcile? ",InvoiceNo:" (:InvoiceNo inst)))
 
