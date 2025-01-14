@@ -1,7 +1,7 @@
 {:name :PaymentReconciliation
  :agentlang-version "current"
- ;; :dependencies [[:fs "resolvers/slack"]
- ;;                [:fs "resolvers/odoo"]]
+ :git-hub-url "https://github.com/agentlang-hub/payment_reconciliation_deploy",
+ :github-org "agentlang-hub",
  :dependencies [[:git "https://github.com/agentlang-hub/slack.git#integrations"]
                 ;;[:git "https://github.com/agentlang-hub/odoo.git"]
                 ]
