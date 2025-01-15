@@ -164,8 +164,8 @@
 
 (dataflow
  :InitSampleData
- ;; [:delete :Order :*]
- ;; [:delete :Invoice :*]
+ [:delete :Order :*]
+ [:delete :Invoice :*]
  {:Order
   {:No 1 :Date "01-Dec-2024" :CustomerNo 101 :TotalPrice 17.3}}
  {:Order
