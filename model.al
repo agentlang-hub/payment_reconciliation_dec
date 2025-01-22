@@ -1,6 +1,6 @@
 {:name :PaymentReconciliation
  :agentlang-version "current"
- :git-hub-url "https://github.com/agentlang-hub/payment_reconciliation_deploy",
+ :git-hub-url "https://github.com/agentlang-hub/payment_reconciliation_dec",
  :github-org "agentlang-hub",
  :dependencies [[:git "https://github.com/agentlang-hub/slack.git" {:model :Slack}]
                 ;;[:git "https://github.com/agentlang-hub/odoo.git"]
